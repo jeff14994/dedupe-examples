@@ -26,3 +26,15 @@ ENV
 distpgsql_init_db.py
 pgsql_example/pgsql_init_db.py
 .idea
+# Ignore environment files
+pgsql_big_dedupe_example/.env
+
+# Ignore data files
+pgsql_big_dedupe_example/Illinois-campaign-contributions.csv
+pgsql_big_dedupe_example/Illinois-campaign-contributions.txt
+pgsql_big_dedupe_example/Illinois-campaign-contributions.txt.zip
+pgsql_big_dedupe_example/__MACOSX/
+
+# Ignore Python virtual environment
+venv/
+

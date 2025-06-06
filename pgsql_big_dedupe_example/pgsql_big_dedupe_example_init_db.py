@@ -18,10 +18,14 @@ import os
 import zipfile
 
 import dj_database_url
+from dotenv import load_dotenv
 import psycopg2
 import psycopg2.extras
 import requests
 import unidecode
+
+# Load environment variables from .env file
+load_dotenv()
 
 _file = "Illinois-campaign-contributions"
 contributions_zip_file = _file + ".txt.zip"
@@ -72,6 +76,27 @@ if not db_conf:
         "export DATABASE_URL=postgres://user:password@host/mydatabase"
     )
 
+# Create a connection to postgres database first
+conn = psycopg2.connect(
+    database="postgres",  # Connect to default postgres database
+    user=db_conf["USER"],
+    password=db_conf["PASSWORD"],
+    host=db_conf["HOST"],
+    port=db_conf["PORT"],
+)
+conn.autocommit = True  # Enable autocommit for database creation
+c = conn.cursor()
+
+# Create database if it doesn't exist
+c.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_conf["NAME"],))
+if not c.fetchone():
+    print(f"Creating database {db_conf['NAME']}...")
+    c.execute(f"CREATE DATABASE {db_conf['NAME']}")
+
+c.close()
+conn.close()
+
+# Now connect to the actual database
 conn = psycopg2.connect(
     database=db_conf["NAME"],
     user=db_conf["USER"],

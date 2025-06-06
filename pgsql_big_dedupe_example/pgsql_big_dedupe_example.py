@@ -26,10 +26,14 @@ import time
 
 import dedupe
 import dj_database_url
+from dotenv import load_dotenv
 import numpy
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import AsIs, register_adapter
+
+# Load environment variables from .env file
+load_dotenv()
 
 register_adapter(numpy.int32, AsIs)
 register_adapter(numpy.int64, AsIs)
@@ -139,7 +143,9 @@ if __name__ == "__main__":
     # `pgsql_big_dedupe_example_init_db.py`
 
     DONOR_SELECT = (
-        "SELECT donor_id, city, name, zip, state, address " "from processed_donors"
+        "SELECT donor_id, city, name, zip, state, address "
+        "from processed_donors "
+        "LIMIT 5000"
     )
 
     # ## Training
@@ -337,7 +343,21 @@ if __name__ == "__main__":
     #
     # For example, let's see who the top 10 donors are.
 
-    locale.setlocale(locale.LC_ALL, "")  # for pretty printing numbers
+    # Set locale to en_US.UTF-8 for proper currency formatting
+    try:
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except locale.Error:
+            print("Warning: Could not set locale to en_US.UTF-8 or en_US. Using default locale.")
+            # Format currency manually if locale setting fails
+            def format_currency(amount, grouping=False, international=False):
+                if grouping:
+                    return f"${amount:,.2f}"
+                else:
+                    return f"${amount:.2f}"
+            locale.currency = format_currency
 
     # Create a temporary table so each group and unmatched record has
     # a unique id
@@ -359,7 +379,7 @@ if __name__ == "__main__":
             " USING (donor_id) "
             " GROUP BY (canon_id) "
             " ORDER BY totals "
-            " DESC LIMIT 10) "
+            " DESC LIMIT 20) "
             "AS donation_totals ON donors.donor_id=donation_totals.canon_id "
             "WHERE donors.donor_id = donation_totals.canon_id"
         )
@@ -378,7 +398,7 @@ if __name__ == "__main__":
             "USING (donor_id) "
             "GROUP BY (donor_id) "
             "ORDER BY totals DESC "
-            "LIMIT 10"
+            "LIMIT 20"
         )
 
         print("Top Donors (raw)")
